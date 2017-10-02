@@ -1,100 +1,174 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Random;
 
 public class Game2048 {
-
-	public static void main(String[] args) {
-		int[][] board;
-		board = innitialize();
-		while(true) {
-			play(board);
+	static int[][] board;
+	static boolean still_in_game = true;
+	
+	public static void main(String[] args) throws IOException {	
+		initialize();
+		while(still_in_game) {
+			//Add random tile to the game 2 or 4.
+			addRandomTile();
+			print();
+			//Select your move via console
+			move();
+			still_in_game=false;
+			check();
 		}
+		System.out.println("Game Over.");
+		//System.out.println("Your score is: ");
+	}
+	
+	private static void initialize() {
+		board = new int[4][4];
 	}
 
-	private static void play(int[][] board) {
-		if(isplace(board)) {
-			board=addtile(board);
-			move(board);
-		}
-	}
-
-	private static int[][] move(int[][] board) {
-		int wheremove = selectmove();
-		int[] array1 = new int[4];
-		int[] array2 = new int[4];
-		int[] array3 = new int[4];
-		int[] array4 = new int[4];
-		switch(wheremove) {
-		case 1:
-			for(int k=0;k<array1.length;k++) {
-				array1[k]=board[k][0];
-				array2[k]=board[k][1];
-				array3[k]=board[k][2];
-				array4[k]=board[k][3];
-			}
-			turning(array1);
-			turning(array2);
-			turning(array3);
-			turning(array4);
-		case 2:
-		case 3:
-		case 4:
-		}
-		return board;
-	}
-
-	private static int selectmove() {
+	private static void move() throws IOException {
 		String move = null;
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-	    while(true) {
-	    	System.out.println("Select move W/A/S/D:");
-	    	try {
-	    		move = reader.readLine();
-	    		if(move.equals("w") || move.equals("W")) {
-	    			return 1;
-	    		}
-	    		if(move.equals("a") || move.equals("A")) {
-	    			return 2;
-	    		}
-	    		if(move.equals("s") || move.equals("S")) {
-	    			return 3;
-	    		}
-	    		if(move.equals("d") || move.equals("D")) {
-	    			return 4;
-	    		}else {
-	    			System.out.println("Move is invalid.");
-	    		}
-	    	} catch (IOException e) {
-	    		e.printStackTrace();
-	    	}
-	    }
+		while(true) {
+			//Wraping InputStreamReader with BufferedReader
+			BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+			System.out.println("Select your move W/A/S/D:");
+			move = input.readLine();
+			if(move.equals("W") || move.equals("w")) {
+				moveUP();
+				break;
+			}
+			if(move.equals("A") || move.equals("a")) {
+				moveLEFT();
+				break;
+			}
+			if(move.equals("S") || move.equals("s")) {
+				moveDOWN();
+				break;
+			}
+			if(move.equals("D") || move.equals("d")) {
+				moveRIGHT();
+				break;
+			}
+			else {
+				System.out.println("Invalid move");
+			}
+		}
 	}
 
-	private static int[][] addtile(int[][] board) {
-		Random generator = new Random();
-		int x,y,value;
-		value=generator.nextInt(2)+1;
+	private static void moveRIGHT() {
+		//sorting board in right direction
+		int[] line = new int[4];
+		for(int i=0;i<board.length;i++) {
+			for(int j=0;j<board.length;j++) {
+				line[line.length-j-1]=board[i][j];
+			}
+			line = sort(line);
+			for(int j=0;j<board.length;j++) {
+				board[i][j]=line[line.length-j-1];
+			}
+		}
+	}
+
+	private static void moveDOWN() {
+		//sorting board in dwon direction
+		int[] line = new int[4];
+		for(int i=0;i<board.length;i++) {
+			for(int j=0;j<board.length;j++) {
+				line[line.length-j-1]=board[j][i];
+			}
+			line = sort(line);
+			for(int j=0;j<board.length;j++) {
+				board[j][i]=line[line.length-j-1];
+			}
+		}
+	}
+
+	private static void moveLEFT() {
+		//sorting board in left direction
+		int[] line = new int[4];
+		for(int i=0;i<board.length;i++) {
+			for(int j=0;j<board.length;j++) {
+				line[j]=board[i][j];
+			}
+			line = sort(line);
+			for(int j=0;j<board.length;j++) {
+				board[i][j]=line[j];
+			}
+		}
+	}
+
+	private static void moveUP() {
+		//sorting board in up direction
+		int[] line = new int[4];
+		for(int i=0;i<board.length;i++) {
+			for(int j=0;j<board.length;j++) {
+				line[j]=board[j][i];
+			}
+			line = sort(line);
+			for(int j=0;j<board.length;j++) {
+				board[j][i]=line[j];
+			}
+		}
+	}
+	
+	private static int[] sort(int[] line) {
+		int[] before = new int[4];
+		int[] after = line;
 		do {
-			x=generator.nextInt(4);
-			y=generator.nextInt(4);
-		}while(board[x][y]!=0);
-		board[x][y]=value;
-		return board;
+			for(int i=0;i<after.length;i++) {
+				before[i]=after[i];
+			}
+			for(int i=1;i<after.length;i++) {
+				if(before[i-1]==0 && before[i]!=0) {
+					after[i-1]=after[i];
+					after[i]=0;
+				}
+				if(before[i-1]==before[i] && before[i]!=0) {
+					after[i-1]++;
+					after[i]=0;
+				}
+			}
+		}while(!Arrays.equals(after, before));
+		return after;
 	}
 
-	private static boolean isplace(int[][] board) {
+	private static void addRandomTile() {
+		//Generate random value then replace random 0 on board with that
+		Random rand = new Random();
+		int x,y,val;
+		val=rand.nextInt(2)+1;
+		do{
+			x=rand.nextInt(4);
+			y=rand.nextInt(4);
+		}
+		while(board[x][y]!=0);
+		board[x][y]=val;
+	}
+
+	private static void check() {
+		//Check for available place to set next tile
 		for(int i=0;i<board.length;i++) {
 			for(int j=0;j<board[i].length;j++) {
-				if(board[i][j]==0) return true;
+				if(board[i][j]==0) {
+					still_in_game=true;
+				}
 			}
 		}
-		return false;
 	}
-
-	private static int[][] innitialize() {
-		int[][] board = new int[4][4];
-		return board;
+	
+	private static void print() {
+		String line = "";
+		for(int i=0;i<board.length;i++) {
+			for(int j=0;j<board[i].length;j++) {
+				if(board[i][j]==0) {
+					line = line + board[i][j] + "\t";
+				}else {
+					line = line + (int) Math.pow(2, board[i][j]) + "\t";
+				}
+			}
+			line = line + "\n";
+		}
+		System.out.println(line);
 	}
 }
